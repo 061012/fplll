@@ -3,7 +3,7 @@ TOPSRCDIR = $(srcdir)/..
 strategydir = $(pkgdatadir)/strategies
 # see https://stackoverflow.com/questions/5867136/autoconf-how-to-get-installation-paths-into-config-h
 AM_CPPFLAGS = -DFPLLL_DEFAULT_STRATEGY_PATH=\"$(strategydir)\" -DFPLLL_DEFAULT_STRATEGY=\"$(strategydir)/default.json\" -I$(TOPSRCDIR)
-EXTRA_DIST = io/json.hpp ballvol.const factorial.const
+EXTRA_DIST = io/json.hpp io/thread_pool.hpp ballvol.const factorial.const
 
 CLEANFILES = *.gcov .libs/*.gcda .libs/*.gcno *.gcno *.gcda */*.gcno */*.gcda
 
@@ -38,8 +38,7 @@ nobase_include_fplll_HEADERS=defs.h fplll.h \
 	sieve/sieve_gauss.h sieve/sieve_common.h sieve/sieve_gauss_str.h sieve/sampler_basic.h \
 	pruner/pruner.h pruner/pruner_simplex.h \
 	householder.h hlll.h \
-	threadpool.h \
-	io/json.hpp io/thread_pool.hpp
+	threadpool.h
 
 bin_PROGRAMS=fplll latticegen latsieve
 check_PROGRAMS=llldiff
@@ -123,7 +122,7 @@ libfplll_la_SOURCES+=\
 	enum-parallel/enumlib_dim.40.cpp enum-parallel/enumlib_dim.30.cpp enum-parallel/enumlib_dim.20.cpp
 EXTRA_libfplll_la_SOURCES+=enum-parallel/enumlib_dim.cpp
 endif
-	
+
 
 # libfplll variants
 libfplllv_la_SOURCES=$(libfplll_la_SOURCES)

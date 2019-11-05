@@ -25,7 +25,7 @@
 #include <fplll/enum/enumerate_ext.h>
 #include <fplll/enum/evaluator.h>
 #include <fplll/enum/parallel-enum.h>
-#include <fplll/gso.h>
+#include <fplll/gso_interface.h>
 #include <memory>
 
 FPLLL_BEGIN_NAMESPACE
@@ -33,7 +33,7 @@ FPLLL_BEGIN_NAMESPACE
 template <typename ZT, typename FT> class Enumeration
 {
 public:
-  Enumeration(MatGSO<ZT, FT> &gso, Evaluator<FT> &evaluator,
+  Enumeration(MatGSOInterface<ZT, FT> &gso, Evaluator<FT> &evaluator,
               const vector<int> &max_indices = vector<int>())
       : _gso(gso), _evaluator(evaluator), _max_indices(max_indices), enumdyn(nullptr), _nodes(0)
   {
@@ -82,7 +82,7 @@ public:
   inline uint64_t get_nodes() const { return _nodes; }
 
 private:
-  MatGSO<ZT, FT> &_gso;
+  MatGSOInterface<ZT, FT> &_gso;
   Evaluator<FT> &_evaluator;
   vector<int> _max_indices;
   std::unique_ptr<EnumerationDyn<ZT, FT>> enumdyn;

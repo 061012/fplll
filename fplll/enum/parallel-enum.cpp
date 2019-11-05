@@ -21,18 +21,21 @@ FPLLL_BEGIN_NAMESPACE
 template <typename ZT, typename FT>
 void ParallelEnumerationDyn<ZT, FT>::enumerate(int first, int last, FT &fmaxdist, long fmaxdistexpo,
                                                int split, const vector<FT> &target_coord,
-                                               const vector<enumxt> &subtree,
+                                               const vector<enumxt> &topsubtree,
                                                const vector<enumf> &pruning)
 {
   if (last == -1)
     last = _gso.d;
   int d = last - first;
   if (split == -1)
-    split = first + 1 + (d - subtree.size()) / 20;
-  if (split < first + subtree.size() + 1 || split >= first + d - 1)
+    split = last - topsubtree.size() - 2 - ((d - int(topsubtree.size()) - 2) / 20);
+  std::cout << "parallel enum: " << first << "-" << last << " split=" << split << std::endl;
+  if (split <= first + 1 || split >= last - int(topsubtree.size()) - 1)
     throw std::runtime_error("ParallelEnumerationDyn::enumerate(): split out of bounds");
+  std::cout << "parallel enum: " << first << "-" << last << " split=" << split << std::endl;
 
   /* prepare bottom enumeration jobs */
+  _threads = get_threads();
   _maxdist = -1;
 
   _first        = first;
@@ -42,39 +45,49 @@ void ParallelEnumerationDyn<ZT, FT>::enumerate(int first, int last, FT &fmaxdist
   _fmaxdist     = fmaxdist;
   _fmaxdistexpo = fmaxdistexpo;
   _target_coord = target_coord;
-  _subtree      = subtree;
-  _pruning      = pruning;
+  //  _subtree      = topsubtree;
+  _pruning = pruning;
 
   _toptrees.clear();
   _toptrees.reserve(1 << 16);
 
   _bottom_evals.clear();
-  for (unsigned i = 0; i < get_threads(); ++i)
+  for (int i = 0; i < _threads; ++i)
     _bottom_evals.emplace_back(*this);
 
   _bottom_enums.clear();
-  for (unsigned i = 0; i < get_threads(); ++i)
+  for (int i = 0; i < _threads; ++i)
     _bottom_enums.emplace_back(_gso, _bottom_evals[i]);
 
   _bottom_fmaxdist.clear();
-  for (unsigned i = 0; i < get_threads(); ++i)
-    _bottom_fmaxdist.emplace_back(fmaxdist);
+  _bottom_fmaxdist.resize(_threads);
+  //  for (int i = 0; i < get_threads(); ++i)
+  //    _bottom_fmaxdist.emplace_back(fmaxdist);
 
-  for (unsigned i = 0; i < get_threads() - 1; ++i)
+  for (int i = 0; i < _threads - 1; ++i)
     threadpool.push([this, i]() { this->thread_job(i); });
 
   _finished = false;
 
   /* start top tree enumeration */
+  auto toppruning = pruning;
+  if (!toppruning.empty())
+    toppruning.erase(toppruning.begin(), toppruning.begin() + split - first);
+  auto toptarget_coord = _target_coord;
+  if (!toptarget_coord.empty())
+    toptarget_coord.erase(toptarget_coord.begin(), toptarget_coord.begin() + split - first);
+  else
+    toptarget_coord.resize(last - split);
   FT fmaxdisttop = fmaxdist;
-  _topenum.enumerate(first, split, fmaxdisttop, fmaxdistexpo, target_coord, subtree, pruning);
+  _topenum.enumerate(split, last, fmaxdisttop, fmaxdistexpo, toptarget_coord, topsubtree,
+                     toppruning);
   _nodes += _topenum.get_nodes();
   _finished = true;
   threadpool.wait_work();
   /* finished enumeration */
 
   fmaxdist = _bottom_fmaxdist[0];
-  for (unsigned i = 0; i < get_threads(); ++i)
+  for (int i = 0; i < _threads; ++i)
     if (_bottom_fmaxdist[i] < fmaxdist)
       fmaxdist = _bottom_fmaxdist[i];
 }
@@ -88,16 +101,25 @@ template <typename ZT, typename FT> bool ParallelEnumerationDyn<ZT, FT>::do_work
       return false;
     subtree = std::move(_toptrees.back());
     _toptrees.pop_back();
+    std::cout << "do_work(" << i << "): ";
+    for (auto &c : subtree)
+      std::cout << " " << c;
+    std::cout << std::endl;
   }
   if (_bottom_fmaxdist[i] != _fmaxdist)
   {
+    std::cout << "first" << std::flush;
     _bottom_fmaxdist[i] = _fmaxdist;
     _bottom_enums[i].enumerate(_first, _last, _bottom_fmaxdist[i], _fmaxdistexpo, _target_coord,
                                subtree, _pruning);
   }
   else
+  {
+    std::cout << "next" << std::flush;
     _bottom_enums[i].next_subtree_enumerate(_bottom_fmaxdist[i], _fmaxdistexpo, subtree);
+  }
   _nodes += _bottom_enums[i].get_nodes();
+  std::cout << "nodes=" << _bottom_enums[i].get_nodes() << std::endl;
   return true;
 }
 

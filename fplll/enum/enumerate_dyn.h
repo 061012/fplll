@@ -22,7 +22,7 @@
 #include <array>
 #include <fplll/enum/enumerate_base.h>
 #include <fplll/enum/evaluator.h>
-#include <fplll/gso.h>
+#include <fplll/gso_interface.h>
 #include <memory>
 
 FPLLL_BEGIN_NAMESPACE
@@ -30,7 +30,7 @@ FPLLL_BEGIN_NAMESPACE
 template <typename ZT, typename FT> class EnumerationDyn : public EnumerationBase
 {
 public:
-  EnumerationDyn(MatGSO<ZT, FT> &gso, Evaluator<FT> &evaluator,
+  EnumerationDyn(MatGSOInterface<ZT, FT> &gso, Evaluator<FT> &evaluator,
                  const vector<int> &max_indices = vector<int>())
       : _gso(gso), _evaluator(evaluator)
   {
@@ -48,7 +48,7 @@ public:
   inline uint64_t get_nodes() const { return nodes; }
 
 protected:
-  MatGSO<ZT, FT> &_gso;
+  MatGSOInterface<ZT, FT> &_gso;
   Evaluator<FT> &_evaluator;
   vector<FT> target;
 

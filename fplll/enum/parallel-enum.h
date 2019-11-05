@@ -16,6 +16,7 @@
 #include <fplll/defs.h>
 #include <fplll/enum/enumerate_base.h>
 #include <fplll/enum/enumerate_dyn.h>
+#include <fplll/gso_interface.h>
 #include <fplll/threadpool.h>
 
 FPLLL_BEGIN_NAMESPACE
@@ -62,7 +63,7 @@ private:
 template <typename ZT, typename FT> class ParallelEnumerationDyn
 {
 public:
-  ParallelEnumerationDyn(MatGSO<ZT, FT> &gso, Evaluator<FT> &evaluator)
+  ParallelEnumerationDyn(MatGSOInterface<ZT, FT> &gso, Evaluator<FT> &evaluator)
       : _topeval(*this), _topenum(gso, _topeval), _gso(gso), _evaluator(evaluator)
   {
   }
@@ -82,6 +83,7 @@ public:
         lock_guard lock(_mutex);
         if (_toptrees.size() < _toptrees.capacity())
         {
+          std::cout << "top node " << new_sol_coord.size() << " " << new_partial_dist << std::endl;
           _toptrees.emplace_back(new_sol_coord.size());
           for (unsigned i = 0; i < new_sol_coord.size(); ++i)
             _toptrees.back()[i] = new_sol_coord[i].get_d();
@@ -97,6 +99,7 @@ public:
                           enumf &maxdist, long norm_exp)
   {
     lock_guard lock(_mutex);
+    std::cout << "sol " << new_sol_coord.size() << " " << new_partial_dist << std::endl;
     if (_maxdist < 0)
       _maxdist = maxdist;
     if (_evaluator.normExp != norm_exp)
@@ -119,12 +122,13 @@ public:
 
 private:
   mutex _mutex;
+  int _threads;
 
   int _first, _last, _split, _d;
   FT _fmaxdist;
   long _fmaxdistexpo;
   vector<FT> _target_coord;
-  vector<enumxt> _subtree;
+  //  vector<enumxt> _subtree;
   vector<enumf> _pruning;
   bool _dual;
   std::atomic_uint64_t _nodes;
@@ -136,7 +140,7 @@ private:
   std::vector<FT> _bottom_fmaxdist;
   std::vector<vector<enumxt>> _toptrees;
 
-  MatGSO<ZT, FT> &_gso;
+  MatGSOInterface<ZT, FT> &_gso;
   Evaluator<FT> &_evaluator;
   enumf _maxdist;
 

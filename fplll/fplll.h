@@ -24,9 +24,11 @@
 
 #include "bkz.h"
 #include "bkz_param.h"
+#include "gso_gram.h"
 #include "hlll.h"
 #include "pruner/pruner.h"
 #include "svpcvp.h"
+#include "threadpool.h"
 #include "util.h"
 #include "wrapper.h"
 
