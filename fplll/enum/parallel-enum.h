@@ -18,6 +18,7 @@
 #include <fplll/enum/enumerate_dyn.h>
 #include <fplll/gso_interface.h>
 #include <fplll/threadpool.h>
+#include <atomic>
 
 FPLLL_BEGIN_NAMESPACE
 
