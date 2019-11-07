@@ -13,12 +13,12 @@
 #ifndef FPLLL_PARALLEL_ENUM_H
 #define FPLLL_PARALLEL_ENUM_H
 
+#include <atomic>
 #include <fplll/defs.h>
 #include <fplll/enum/enumerate_base.h>
 #include <fplll/enum/enumerate_dyn.h>
 #include <fplll/gso_interface.h>
 #include <fplll/threadpool.h>
-#include <atomic>
 
 FPLLL_BEGIN_NAMESPACE
 
