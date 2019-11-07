@@ -43,7 +43,11 @@ public:
                  const vector<enumf> &pruning = vector<enumf>(), bool dual = false,
                  bool subtree_reset = false);
 
-  void next_subtree_enumerate(FT &fmaxdist, long fmaxdistexpo, const vector<enumxt> &subtree);
+  void next_subtree_enumerate(int first, int last, FT &fmaxdist, long fmaxdistexpo,
+                              const vector<FT> &target_coord = vector<FT>(),
+                              const vector<enumxt> &subtree  = vector<enumxt>(),
+                              const vector<enumf> &pruning = vector<enumf>(), bool dual = false,
+                              bool subtree_reset = false);
 
   inline uint64_t get_nodes() const { return nodes; }
 

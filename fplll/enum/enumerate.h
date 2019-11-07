@@ -61,7 +61,6 @@ public:
     if (get_threads() > 1 && last - first > 10 && dual == false && subtree_reset == false &&
         _max_indices.empty())
     {
-      //      std::cout << "parallel enum: yes" << std::endl;
       if (enumparalleldyn.get() == nullptr)
         enumparalleldyn.reset(new ParallelEnumerationDyn<ZT, FT>(_gso, _evaluator));
       enumparalleldyn->enumerate(first, last, fmaxdist, fmaxdistexpo, -1, target_coord, subtree,
@@ -70,7 +69,6 @@ public:
     }
     else
     {
-      //      std::cout << "parallel enum: no" << std::endl;
       if (enumdyn.get() == nullptr)
         enumdyn.reset(new EnumerationDyn<ZT, FT>(_gso, _evaluator, _max_indices));
       enumdyn->enumerate(first, last, fmaxdist, fmaxdistexpo, target_coord, subtree, pruning, dual,

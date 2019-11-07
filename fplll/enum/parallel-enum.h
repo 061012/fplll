@@ -83,7 +83,6 @@ public:
         lock_guard lock(_mutex);
         if (_toptrees.size() < _toptrees.capacity())
         {
-          std::cout << "top node " << new_sol_coord.size() << " " << new_partial_dist << std::endl;
           _toptrees.emplace_back(new_sol_coord.size());
           for (unsigned i = 0; i < new_sol_coord.size(); ++i)
             _toptrees.back()[i] = new_sol_coord[i].get_d();
@@ -99,7 +98,6 @@ public:
                           enumf &maxdist, long norm_exp)
   {
     lock_guard lock(_mutex);
-    std::cout << "sol " << new_sol_coord.size() << " " << new_partial_dist << std::endl;
     if (_maxdist < 0)
       _maxdist = maxdist;
     if (_evaluator.normExp != norm_exp)

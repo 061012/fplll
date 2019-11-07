@@ -160,13 +160,33 @@ void EnumerationDyn<ZT, FT>::enumerate(int first, int last, FT &fmaxdist, long f
 }
 
 template <typename ZT, typename FT>
-void EnumerationDyn<ZT, FT>::next_subtree_enumerate(FT &fmaxdist, long fmaxdistexpo,
-                                                    const vector<enumxt> &subtree)
+void EnumerationDyn<ZT, FT>::next_subtree_enumerate(
+    int first, int last, FT &fmaxdist, long fmaxdistexpo, const vector<FT> &target_coord,
+    const vector<enumxt> &subtree, const vector<enumf> &pruning, bool _dual, bool subtree_reset)
 {
   if (dual && !_evaluator.empty())
   {
     for (auto it = _evaluator.begin(), itend = _evaluator.end(); it != itend; ++it)
       reverse_by_swap(it->second, 0, d - 1);
+  }
+
+  bool solvingsvp = target_coord.empty();
+  if (last == -1)
+    last = _gso.d;
+
+  resetflag = !_max_indices.empty();
+  if (resetflag)
+    reset_depth = _max_indices[last - subtree.size() - 1];
+
+  if (solvingsvp)
+  {
+    for (int i = 0; i < d; ++i)
+      center_partsum[i] = 0.0;
+  }
+  else
+  {
+    for (int i = 0; i < d; ++i)
+      center_partsum[i] = target_coord[i + first].get_d();
   }
 
   FT fmaxdistnorm;
@@ -175,7 +195,7 @@ void EnumerationDyn<ZT, FT>::next_subtree_enumerate(FT &fmaxdist, long fmaxdiste
   _evaluator.set_normexp(normexp);
 
   save_rounding();
-  prepare_enumeration(subtree, is_svp, false);
+  prepare_enumeration(subtree, solvingsvp, subtree_reset);
   do_enumerate();
   restore_rounding();
 
@@ -297,6 +317,8 @@ template <typename ZT, typename FT> void EnumerationDyn<ZT, FT>::do_enumerate()
     enumerate_loop<false, true, true>();
   else if (!dual && !_evaluator.findsubsols && resetflag)
     enumerate_loop<false, false, true>();
+  else
+    throw;
 }
 
 template class EnumerationDyn<Z_NR<mpz_t>, FP_NR<double>>;

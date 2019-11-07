@@ -28,11 +28,11 @@ void ParallelEnumerationDyn<ZT, FT>::enumerate(int first, int last, FT &fmaxdist
     last = _gso.d;
   int d = last - first;
   if (split == -1)
-    split = last - topsubtree.size() - 2 - ((d - int(topsubtree.size()) - 2) / 20);
-  std::cout << "parallel enum: " << first << "-" << last << " split=" << split << std::endl;
+    split = last - topsubtree.size() - 2 - ((d - int(topsubtree.size()) - 2) / 10);
+  //  std::cout << "parallel enum: " << first << "-" << last << " split=" << split << " ml=" <<
+  //  fmaxdist << "e" << fmaxdistexpo << std::endl;
   if (split <= first + 1 || split >= last - int(topsubtree.size()) - 1)
     throw std::runtime_error("ParallelEnumerationDyn::enumerate(): split out of bounds");
-  std::cout << "parallel enum: " << first << "-" << last << " split=" << split << std::endl;
 
   /* prepare bottom enumeration jobs */
   _threads = get_threads();
@@ -45,8 +45,7 @@ void ParallelEnumerationDyn<ZT, FT>::enumerate(int first, int last, FT &fmaxdist
   _fmaxdist     = fmaxdist;
   _fmaxdistexpo = fmaxdistexpo;
   _target_coord = target_coord;
-  //  _subtree      = topsubtree;
-  _pruning = pruning;
+  _pruning      = pruning;
 
   _toptrees.clear();
   _toptrees.reserve(1 << 16);
@@ -60,10 +59,9 @@ void ParallelEnumerationDyn<ZT, FT>::enumerate(int first, int last, FT &fmaxdist
     _bottom_enums.emplace_back(_gso, _bottom_evals[i]);
 
   _bottom_fmaxdist.clear();
-  _bottom_fmaxdist.resize(_threads);
-  //  for (int i = 0; i < get_threads(); ++i)
-  //    _bottom_fmaxdist.emplace_back(fmaxdist);
+  _bottom_fmaxdist.resize(_threads, FT(-1.0));
 
+  // start 1 thread less, because we'll do that work from main thread
   for (int i = 0; i < _threads - 1; ++i)
     threadpool.push([this, i]() { this->thread_job(i); });
 
@@ -74,15 +72,14 @@ void ParallelEnumerationDyn<ZT, FT>::enumerate(int first, int last, FT &fmaxdist
   if (!toppruning.empty())
     toppruning.erase(toppruning.begin(), toppruning.begin() + split - first);
   auto toptarget_coord = _target_coord;
-  if (!toptarget_coord.empty())
-    toptarget_coord.erase(toptarget_coord.begin(), toptarget_coord.begin() + split - first);
-  else
-    toptarget_coord.resize(last - split);
+  if (toptarget_coord.empty())
+    toptarget_coord.resize(last, FT(0.0));
   FT fmaxdisttop = fmaxdist;
   _topenum.enumerate(split, last, fmaxdisttop, fmaxdistexpo, toptarget_coord, topsubtree,
-                     toppruning);
+                     toppruning, false, false);
   _nodes += _topenum.get_nodes();
   _finished = true;
+  thread_job(_threads - 1);
   threadpool.wait_work();
   /* finished enumeration */
 
@@ -101,25 +98,20 @@ template <typename ZT, typename FT> bool ParallelEnumerationDyn<ZT, FT>::do_work
       return false;
     subtree = std::move(_toptrees.back());
     _toptrees.pop_back();
-    std::cout << "do_work(" << i << "): ";
-    for (auto &c : subtree)
-      std::cout << " " << c;
-    std::cout << std::endl;
   }
-  if (_bottom_fmaxdist[i] != _fmaxdist)
+  if (_bottom_fmaxdist[i] == FT(-1.0))
   {
-    std::cout << "first" << std::flush;
     _bottom_fmaxdist[i] = _fmaxdist;
     _bottom_enums[i].enumerate(_first, _last, _bottom_fmaxdist[i], _fmaxdistexpo, _target_coord,
                                subtree, _pruning);
   }
   else
   {
-    std::cout << "next" << std::flush;
-    _bottom_enums[i].next_subtree_enumerate(_bottom_fmaxdist[i], _fmaxdistexpo, subtree);
+    _bottom_fmaxdist[i] = _fmaxdist;
+    _bottom_enums[i].next_subtree_enumerate(_first, _last, _bottom_fmaxdist[i], _fmaxdistexpo,
+                                            _target_coord, subtree, _pruning);
   }
   _nodes += _bottom_enums[i].get_nodes();
-  std::cout << "nodes=" << _bottom_enums[i].get_nodes() << std::endl;
   return true;
 }
 
@@ -130,11 +122,13 @@ template <typename ZT, typename FT> void ParallelEnumerationDyn<ZT, FT>::thread_
     if (!do_work(i))
     {
       if (_finished)
-        return;
+        break;
       else
         std::this_thread::yield();
     }
   }
+  while (do_work(i))
+    ;
 }
 
 template class ParallelEnumerationDyn<Z_NR<mpz_t>, FP_NR<double>>;
