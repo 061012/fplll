@@ -130,7 +130,7 @@ private:
   //  vector<enumxt> _subtree;
   vector<enumf> _pruning;
   bool _dual;
-  std::atomic_uint64_t _nodes;
+  std::atomic<uint64_t> _nodes;
 
   TopEvaluator<ZT, FT> _topeval;
   EnumerationDyn<ZT, FT> _topenum;
