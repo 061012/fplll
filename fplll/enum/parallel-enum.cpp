@@ -83,31 +83,32 @@ void ParallelEnumerationDyn<ZT, FT>::enumerate(int first, int last, FT &fmaxdist
   threadpool.wait_work();
   /* finished enumeration */
 
-  fmaxdist = _bottom_fmaxdist[0];
   for (int i = 0; i < _threads; ++i)
-    if (_bottom_fmaxdist[i] < fmaxdist)
+    if (_bottom_fmaxdist[i] >= 0.0 && _bottom_fmaxdist[i] < fmaxdist)
       fmaxdist = _bottom_fmaxdist[i];
 }
 
 template <typename ZT, typename FT> bool ParallelEnumerationDyn<ZT, FT>::do_work(unsigned i)
 {
   vector<enumxt> subtree;
+  FT tmpfmaxdist;
   {
     lock_guard lock(_mutex);
     if (_toptrees.empty())
       return false;
     subtree = std::move(_toptrees.back());
     _toptrees.pop_back();
+    tmpfmaxdist = _fmaxdist;
   }
   if (_bottom_fmaxdist[i] == FT(-1.0))
   {
-    _bottom_fmaxdist[i] = _fmaxdist;
+    _bottom_fmaxdist[i] = tmpfmaxdist;
     _bottom_enums[i].enumerate(_first, _last, _bottom_fmaxdist[i], _fmaxdistexpo, _target_coord,
                                subtree, _pruning);
   }
   else
   {
-    _bottom_fmaxdist[i] = _fmaxdist;
+    _bottom_fmaxdist[i] = tmpfmaxdist;
     _bottom_enums[i].next_subtree_enumerate(_first, _last, _bottom_fmaxdist[i], _fmaxdistexpo,
                                             _target_coord, subtree, _pruning);
   }

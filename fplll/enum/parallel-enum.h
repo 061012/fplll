@@ -104,6 +104,7 @@ public:
     if (_evaluator.normExp != norm_exp)
       _evaluator.set_normexp(norm_exp);
     _evaluator.eval_sol(new_sol_coord, new_partial_dist, _maxdist);
+    _fmaxdist.mul_2si(_maxdist, _evaluator.normExp);
     maxdist = _maxdist;
   }
 
