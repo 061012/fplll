@@ -213,7 +213,7 @@ template <typename ZT, typename FT>
 void EnumerationDyn<ZT, FT>::prepare_enumeration(const vector<enumxt> &subtree, bool solvingsvp,
                                                  bool subtree_reset)
 {
-  nodes = 0;
+  nodes  = 0;
   is_svp = solvingsvp;
 
   enumf newdist = 0.0;

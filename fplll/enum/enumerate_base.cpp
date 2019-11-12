@@ -190,7 +190,7 @@ template <bool dualenum, bool findsubsols, bool enable_reset> void EnumerationBa
 
   partdist[k_end] = 0.0;  // needed to make next_pos_up() work properly
 
-//  nodes -= k_end - k;
+  //  nodes -= k_end - k;
   k = k_end - 1;
 
 #ifdef FPLLL_WITH_RECURSIVE_ENUM
