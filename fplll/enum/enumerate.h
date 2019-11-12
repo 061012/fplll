@@ -58,7 +58,7 @@ public:
     }
     // if external enumerator is not available, not possible or when it fails then fall through to
     // fplll enumeration
-    if (get_threads() > 1 && last - first > 10 && dual == false && subtree_reset == false &&
+    if (get_threads() > 1 && last - first >= 40 && dual == false && subtree_reset == false &&
         _max_indices.empty())
     {
       if (enumparalleldyn.get() == nullptr)

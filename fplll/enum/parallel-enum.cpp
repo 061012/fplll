@@ -68,6 +68,7 @@ void ParallelEnumerationDyn<ZT, FT>::enumerate(int first, int last, FT &fmaxdist
   _finished = false;
 
   /* start top tree enumeration */
+  _nodes = 0;
   auto toppruning = pruning;
   if (!toppruning.empty())
     toppruning.erase(toppruning.begin(), toppruning.begin() + split - first);
